@@ -1,2 +1,3 @@
 # accounting-kts
-Collection of accounting tools written in Kotlin
+This toolset is configured to be run with IntelliJ IDEA. After cloning this repo simply open the directory as an IDEA Kotlin project.
+
