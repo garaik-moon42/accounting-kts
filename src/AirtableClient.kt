@@ -9,14 +9,8 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.YearMonth
 import java.util.*
-import kotlin.collections.ArrayList
 
-private const val BASE_ID: String = "appODavvV60uXOqnC"
-private const val RECORD_TABLE_ID: String = "tblKKtw8kgNVfK4pa"
-private const val PARTNER_TABLE_ID: String = "tblDAC6SuH7nBI1OP"
-private const val TYPE_TABLE_ID: String = "tblxpOuxH7oWtlda8"
 private const val AIRTABLE_URI: String = "https://api.airtable.com/v0/%s/%s"
-private const val AIRTABLE_TOKEN: String = "patmAXskVHOs01sPn.094ed9e354ba953b0473cc059e15d143fe4b164ee7ee45f921813f88223fdc61"
 
 data class AirtableRecord<T>(val id: String, val createdTime: Date, val fields: T)
 data class AirtableResponse<T>(val records: List<AirtableRecord<T>>, val offset: String)
@@ -55,7 +49,7 @@ class AirtableClient(private val year: Short, private val month: Short) {
 
     lateinit var registryItems: List<RegistryItem>
 
-    fun buildFilterFormula():String {
+    private fun buildFilterFormula():String {
         val types = listOf("Átutalásos számla", "Díjbekérő", "Kártyás számla", "Készpénzes számla",
             "Proforma számla", "Útelszámolás", "Sztornó számla", "Érvénytelenítő számla",
             "Számlával egy tekintet alá eső okirat", "Teljesítési igazolás")
@@ -81,14 +75,14 @@ class AirtableClient(private val year: Short, private val month: Short) {
             }
         }
         val uri = URI.create(buildString {
-            append(AIRTABLE_URI.format(BASE_ID, tableId));
+            append(AIRTABLE_URI.format(Config.Airtable.baseId, tableId))
             if (queryParams.isNotEmpty()) {
                 append(queryParams.entries.joinToString(separator = "&", prefix = "?") { (param, value) -> "${param}=${value}" })
             }
         })
         return HttpRequest.newBuilder()
             .uri(uri)
-            .header("Authorization", "Bearer $AIRTABLE_TOKEN")
+            .header("Authorization", "Bearer ${Config.Airtable.token}")
             .GET()
             .build()
     }
@@ -120,9 +114,9 @@ class AirtableClient(private val year: Short, private val month: Short) {
     }
 
     fun fetch() {
-        val documentTypes = fetchInstanceMap(TYPE_TABLE_ID, DocumentType::class.java)
-        val partners = fetchInstanceMap(PARTNER_TABLE_ID, Partner::class.java)
-        val airtableRecords = fetchAirtableData(RECORD_TABLE_ID, buildFilterFormula(), RegistryItem::class.java)
+        val documentTypes = fetchInstanceMap(Config.Airtable.typeTableId, DocumentType::class.java)
+        val partners = fetchInstanceMap(Config.Airtable.partnerTableId, Partner::class.java)
+        val airtableRecords = fetchAirtableData(Config.Airtable.recordTableId, buildFilterFormula(), RegistryItem::class.java)
         registryItems = airtableRecords.map { arri:AirtableRecord<RegistryItem> -> arri.fields }.onEach { ri ->
             ri.assignedTypes?.firstOrNull()?.let { ri.type = documentTypes[it] }
             ri.assignedPartners?.firstOrNull()?.let { ri.partner = partners[it] }

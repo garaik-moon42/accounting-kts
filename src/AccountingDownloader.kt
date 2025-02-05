@@ -17,11 +17,34 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.text.DecimalFormat
+import java.util.*
 import com.google.api.services.drive.model.File as GoogleFile
 
 object Logger {
     fun log(msg: String?) {
         println(msg)
+    }
+}
+
+object Config {
+    private val properties: Properties
+
+    object Airtable {
+        val baseId: String = properties.getProperty("airtable.baseId")
+        val recordTableId: String = properties.getProperty("airtable.recordTableId")
+        val partnerTableId: String = properties.getProperty("airtable.partnerTableId")
+        val typeTableId: String = properties.getProperty("airtable.typeTableId")
+        val token: String = properties.getProperty("airtable.token")
+    }
+
+    object Google {
+        val apiClientKey = properties.getProperty("google.api.clientKey")
+    }
+
+    init {
+        val propertiesFileName = "accounting.properties"
+        val propertiesFileUrl = this::class.java.classLoader.getResource(propertiesFileName) ?: error("Properties file '$propertiesFileName' not found.")
+        properties = Properties().apply { load(propertiesFileUrl.openStream()) }
     }
 }
 
@@ -66,7 +89,7 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
     }
 
     private suspend fun downloadFile(ri: RegistryItem, drive: Drive.Files) {
-        Logger.log("Downloading file of registry item #${ri.seq}...")
+        Logger.log("Downloading file of registry item #${ri.seq} with name '${ri.name}'...")
         withContext(Dispatchers.IO) {
             val googleDriveFile = drive.get(ri.googleDriveId).execute()
             val targetPartnerDir = File(TARGET_DIR + File.separator + composeDirNameFor(ri)).also(File::mkdirs)
@@ -101,7 +124,8 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
     }
 
     private fun getCredentials(httpTransport: NetHttpTransport?): Credential {
-        val instr = AccountingDownloader::class.java.getResourceAsStream("/credentials.json") ?: error("Missing credentials.json file")
+        val instr = AccountingDownloader::class.java.getResourceAsStream(Config.Google.apiClientKey)
+            ?: error("Missing credentials.json file")
         val clientSecrets = GoogleClientSecrets.load(GsonFactory.getDefaultInstance(), InputStreamReader(instr))
         val flow = GoogleAuthorizationCodeFlow.Builder(
             httpTransport, GsonFactory.getDefaultInstance(), clientSecrets, listOf(DriveScopes.DRIVE_READONLY))
