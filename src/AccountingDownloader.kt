@@ -76,11 +76,10 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
 
         File(TARGET_DIR).also(File::deleteRecursively).mkdirs()
 
-        val airtableClient = AirtableClient(year, month)
-        airtableClient.fetch()
+        val airtableData = AirtableData(year, month)
 
         runBlocking {
-            for (ri in airtableClient.registryItems) {
+            for (ri in airtableData.registryItems) {
                 launch {
                     downloadFile(ri, drive)
                 }
@@ -107,7 +106,7 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
         return sanitizeFileName(registryItem.partner?.name ?: error("No partner found for registry item #${registryItem.seq}.")).trim()
     }
 
-    private fun composeFileNameFor(googleDriveFile: GoogleFile, registryItem: RegistryItem): String {
+    private fun  composeFileNameFor(googleDriveFile: GoogleFile, registryItem: RegistryItem): String {
         return buildString {
             with (registryItem) {
                 append("%05d".format(seq))

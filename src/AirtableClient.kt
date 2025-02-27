@@ -14,42 +14,10 @@ private const val AIRTABLE_URI: String = "https://api.airtable.com/v0/%s/%s"
 
 data class AirtableRecord<T>(val id: String, val createdTime: Date, val fields: T)
 data class AirtableResponse<T>(val records: List<AirtableRecord<T>>, val offset: String)
-data class DocumentType(val name: String)
-data class Partner(val name: String, val notes: String)
-data class RegistryItem(val seq: Int) {
-    val direction: String? = null
-    val createdOn: Date? = null
-    @Transient
-    var partner: Partner? = null
-    @SerializedName("partner")
-    val assignedPartners: List<String>? = null
-    @Transient
-    var type: DocumentType? = null
-    @SerializedName("type")
-    val assignedTypes: List<String>? = null
-    val keywords: List<String>? = null
-    val notes: String? = null
-    val googleDriveId: String? = null
-    val googleDriveURL: String? = null
-    val id: String? = null
-    val amount: BigDecimal? = null
-    val currency: String? = null
-    val refDate: Date? = null
-    val dueDate: Date? = null
-    val modifiedOn: Date? = null
-    val name: String? = null
-    val mimeType: String? = null
 
-    override fun toString(): String {
-        return "RegistryItem(name=$name, notes=$notes, keywords=$keywords, direction=$direction, seq=$seq)"
-    }
-}
+object FilterFormulaBuilder {
 
-class AirtableClient(private val year: Short, private val month: Short) {
-
-    lateinit var registryItems: List<RegistryItem>
-
-    private fun buildFilterFormula():String {
+    fun forRegistryItems(year: Short, month: Short):String {
         val types = listOf("Átutalásos számla", "Díjbekérő", "Kártyás számla", "Készpénzes számla",
             "Proforma számla", "Útelszámolás", "Sztornó számla", "Érvénytelenítő számla",
             "Számlával egy tekintet alá eső okirat", "Teljesítési igazolás")
@@ -63,6 +31,9 @@ class AirtableClient(private val year: Short, private val month: Short) {
             append(")")
         }
     }
+}
+
+object AirtableClient {
 
     private fun buildAirtableRequest(tableId: String, offset: String?, filterFormula: String?): HttpRequest {
         val queryParams = buildMap {
@@ -88,7 +59,7 @@ class AirtableClient(private val year: Short, private val month: Short) {
     }
 
 
-    private fun <T> fetchAirtableData(tableId: String, filterFormula: String?, targetClass: Class<T>):List<AirtableRecord<T>> {
+    fun <T> fetchAirtableData(tableId: String, filterFormula: String?, targetClass: Class<T>):List<AirtableRecord<T>> {
         val http = HttpClient.newHttpClient()
         val gson = GsonBuilder().create()
         val data = ArrayList<AirtableRecord<T>>()
@@ -108,18 +79,8 @@ class AirtableClient(private val year: Short, private val month: Short) {
         return data
     }
 
-    private fun <T> fetchInstanceMap(airtableTableId: String, targetClass: Class<T>):Map<String, T> {
+    fun <T> fetchInstanceMap(airtableTableId: String, targetClass: Class<T>):Map<String, T> {
         val instanceList:List<AirtableRecord<T>> = fetchAirtableData(airtableTableId, null, targetClass)
         return instanceList.associate { it.id to it.fields }
-    }
-
-    fun fetch() {
-        val documentTypes = fetchInstanceMap(Config.Airtable.typeTableId, DocumentType::class.java)
-        val partners = fetchInstanceMap(Config.Airtable.partnerTableId, Partner::class.java)
-        val airtableRecords = fetchAirtableData(Config.Airtable.recordTableId, buildFilterFormula(), RegistryItem::class.java)
-        registryItems = airtableRecords.map { arri:AirtableRecord<RegistryItem> -> arri.fields }.onEach { ri ->
-            ri.assignedTypes?.firstOrNull()?.let { ri.type = documentTypes[it] }
-            ri.assignedPartners?.firstOrNull()?.let { ri.partner = partners[it] }
-        }
     }
 }
