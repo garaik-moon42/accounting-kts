@@ -5,7 +5,7 @@
     "recordTableId": "tblKKtw8kgNVfK4pa",
     "partnerTableId": "tblDAC6SuH7nBI1OP",
     "typeTableId": "tblxpOuxH7oWtlda8",
-    "token": "pattl3Xnwolr3KW9Z.d44ad783e0b32240f4093e6ce537575cd750959b83048f355c3dde1d9f222a71"
+    "token": "<AIRTABLE TOKEN COMES HERE>"
   },
   "google": {
     "clientSecret": "credentials.json",

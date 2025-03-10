@@ -1,7 +1,5 @@
 import com.google.gson.GsonBuilder
-import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import java.math.BigDecimal
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -17,7 +15,7 @@ data class AirtableResponse<T>(val records: List<AirtableRecord<T>>, val offset:
 
 object FilterFormulaBuilder {
 
-    fun forRegistryItems(year: Short, month: Short):String {
+    fun forInvoicesOfMonth(year: Short, month: Short):String {
         val types = listOf("Átutalásos számla", "Díjbekérő", "Kártyás számla", "Készpénzes számla",
             "Proforma számla", "Útelszámolás", "Sztornó számla", "Érvénytelenítő számla",
             "Számlával egy tekintet alá eső okirat", "Teljesítési igazolás")
@@ -46,14 +44,14 @@ object AirtableClient {
             }
         }
         val uri = URI.create(buildString {
-            append(AIRTABLE_URI.format(Config.Airtable.baseId, tableId))
+            append(AIRTABLE_URI.format(Config.data.airtable.baseId, tableId))
             if (queryParams.isNotEmpty()) {
                 append(queryParams.entries.joinToString(separator = "&", prefix = "?") { (param, value) -> "${param}=${value}" })
             }
         })
         return HttpRequest.newBuilder()
             .uri(uri)
-            .header("Authorization", "Bearer ${Config.Airtable.token}")
+            .header("Authorization", "Bearer ${Config.data.airtable.token}")
             .GET()
             .build()
     }

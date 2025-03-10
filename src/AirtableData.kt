@@ -7,12 +7,12 @@ data class Partner(val name: String, val notes: String)
 data class RegistryItem(val seq: Int) {
     val direction: String? = null
     val createdOn: Date? = null
-    @Transient
-    var partner: Partner? = null
+    val partner: Partner?
+        get() = if (!assignedPartnerIds.isNullOrEmpty()) AirtableCache.partners[assignedPartnerIds.first()] else null
     @SerializedName("partner")
     val assignedPartnerIds: List<String>? = null
-    @Transient
-    var type: DocumentType? = null
+    val type: DocumentType?
+        get() = if (!assignedTypeIds.isNullOrEmpty()) AirtableCache.documentTypes[assignedTypeIds.first()] else null
     @SerializedName("type")
     val assignedTypeIds: List<String>? = null
     val keywords: List<String>? = null
@@ -33,11 +33,11 @@ data class RegistryItem(val seq: Int) {
     }
 }
 
-class AirtableData(year: Short, month: Short) {
-    val documentTypes: Map<String, DocumentType> = AirtableClient.fetchInstanceMap(Config.Airtable.typeTableId, DocumentType::class.java)
-    val partners: Map<String, Partner> = AirtableClient.fetchInstanceMap(Config.Airtable.partnerTableId, Partner::class.java)
-    val registryItems: List<RegistryItem> =
-        AirtableClient
-            .fetchAirtableData(Config.Airtable.recordTableId, FilterFormulaBuilder.forRegistryItems(year, month), RegistryItem::class.java)
-            .map { it.fields }
+private object AirtableCache {
+    val documentTypes: Map<String, DocumentType> = AirtableClient.fetchInstanceMap(Config.data.airtable.typeTableId, DocumentType::class.java)
+    val partners: Map<String, Partner> = AirtableClient.fetchInstanceMap(Config.data.airtable.partnerTableId, Partner::class.java)
 }
+
+fun fetchInvoicesOfMonth(year: Short, month: Short): List<RegistryItem> = AirtableClient
+            .fetchAirtableData(Config.data.airtable.recordTableId, FilterFormulaBuilder.forInvoicesOfMonth(year, month), RegistryItem::class.java)
+            .map { it.fields }
