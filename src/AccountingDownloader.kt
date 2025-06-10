@@ -70,10 +70,15 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
         Logger.log("Downloading file of registry item #${invoiceData.seq} with name '${invoiceData.name}'...")
         withContext(Dispatchers.IO) {
             val googleDriveFile = drive.get(invoiceData.googleDriveId).execute()
-            val targetPartnerDir = File(Config.data.download.targetDir + File.separator + composeDirNameFor(invoiceData)).also(File::mkdirs)
-            val targetFilePath = targetPartnerDir.absolutePath + File.separator + composeFileNameFor(googleDriveFile, invoiceData)
+            val targetDirPath:String = if (Config.data.download.separatePartnerDirs) {
+                File(Config.data.download.targetDir + File.separator + composeDirNameFor(invoiceData)).also(File::mkdirs).absolutePath
+            }
+            else {
+                Config.data.download.targetDir
+            }
+            val targetFilePath = targetDirPath + File.separator + composeFileNameFor(googleDriveFile, invoiceData)
             drive.get(invoiceData.googleDriveId).executeMediaAndDownloadTo(FileOutputStream(targetFilePath))
-            Logger.log("File downloaded for #${invoiceData.seq}: $targetFilePath")
+            Logger.log("File downloaded for #${invoiceData.seq}: $targetDirPath")
         }
     }
 
@@ -88,9 +93,16 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
     private fun  composeFileNameFor(googleDriveFile: GoogleFile, registryItem: RegistryItem): String {
         return buildString {
             with (registryItem) {
-                append("%05d".format(seq))
-                append("_")
-                partner?.let { append(sanitizeFileName(it.name)) }
+                if (Config.data.download.separatePartnerDirs) {
+                    append("%05d".format(seq))
+                    append("_")
+                    partner?.let { append(sanitizeFileName(it.name)) }
+                }
+                else {
+                    partner?.let { append(sanitizeFileName(it.name)) }
+                    append("_")
+                    append("%05d".format(seq))
+                }
                 append("_")
                 type?.let { append(sanitizeFileName(it.name)) }
                 append("_")

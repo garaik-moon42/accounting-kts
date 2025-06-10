@@ -22,7 +22,8 @@ data class ConfigData (
 )
 
 data class DownloadData (
-    val targetDir: String
+    val targetDir: String,
+    val separatePartnerDirs: Boolean
 )
 
 data class AirtableConfig (

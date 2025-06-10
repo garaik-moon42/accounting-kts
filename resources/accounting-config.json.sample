@@ -1,5 +1,9 @@
 {
   "applicationName": "MOON42 Accounting Toolbox",
+  "download": {
+    "targetDir": "accounting-files",
+    "separatePartnerDirs": false
+  },
   "airtable": {
     "baseId": "appODavvV60uXOqnC",
     "recordTableId": "tblKKtw8kgNVfK4pa",

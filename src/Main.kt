@@ -1,5 +1,5 @@
 fun main() {
-    val downloader = AccountingDownloader(2025, 2)
+    val downloader = AccountingDownloader(2025, 5)
     downloader.download()
     println("Done.")
 }
