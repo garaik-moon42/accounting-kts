@@ -57,7 +57,7 @@ class AccountingDownloader(private val year: Short, private val month: Short) {
 
         File(Config.data.download.targetDir).also(File::deleteRecursively).mkdirs()
 
-        val invoicesOfMonth = fetchInvoicesOfMonth(year, month)
+        val invoicesOfMonth = Airtable.fetchInvoicesOfMonth(year, month)
 
         runBlocking {
             for (invoiceData in invoicesOfMonth) {

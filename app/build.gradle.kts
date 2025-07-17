@@ -14,7 +14,7 @@ plugins {
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
+    mavenLocal()
     mavenCentral()
     google()
 }
@@ -31,6 +31,8 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
     implementation("com.google.code.gson:gson:2.11.0")
+
+    implementation("com.moon42.airtable:airtable-client:0.0.2")
 
     implementation("com.google.api-client:google-api-client:2.0.0")
     implementation("com.google.oauth-client:google-oauth-client-jetty:1.34.1")
