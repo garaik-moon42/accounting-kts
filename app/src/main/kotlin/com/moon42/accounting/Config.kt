@@ -1,3 +1,5 @@
+package com.moon42.accounting
+
 import com.google.gson.Gson
 import java.io.InputStreamReader
 
